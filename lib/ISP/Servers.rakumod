@@ -1,4 +1,4 @@
-unit class ISP::Server::Inventory:api<1>:auth<Mark Devine (mark@markdevine.com)>;
+unit class ISP::Servers:api<1>:auth<Mark Devine (mark@markdevine.com)>;
 
 use Term::Choose;
 
