@@ -1,0 +1,21 @@
+{
+  "auth": "zef:markldevine",
+  "authors": [ "Mark Devine <mark@markdevine.com>" ],
+  "depends": [
+    "Term::Choose"
+  ],
+  "description": "ISP Servers",
+  "license": "Artistic-2.0",
+  "meta-version": 0,
+  "name": "ISP::Servers",
+  "perl": "6.*",
+  "provides": {
+    "ISP::Servers": "lib/ISP/Servers.rakumod"
+  },
+  "resources": [],
+  "source-url": "https://github.com/markldevine/ISP-Servers.git",
+  "tags": [
+    "ISP"
+  ],
+  "version": "0.0.1"
+}
