@@ -81,3 +81,32 @@ method isp-server (Str $isp-server-name?) {
 
 
 =finish
+
+################################################################################
+#   Sort out the ISP server info                                               #
+################################################################################
+
+    my $PRIMARY_SERVER_NAME = $isp-server.uc;
+    unless %isp-servers{$PRIMARY_SERVER_NAME}:exists {
+        $*ERR.put: colored('Unrecognized $isp-server <' ~ $isp-server ~ '> specified!', 'red');
+        die colored('Either fix your --$isp-server=<value> or update Redis eb:isp:servers:*', 'red');
+    }
+    die "Set up '/opt/tivoli/tsm/client/ba/bin/dsm.sys' & /usr/bin/dsmadmc on this host platform before using this script." unless '/opt/tivoli/tsm/client/ba/bin/dsm.sys'.IO.path:s;
+    my @dsm-sys     = slurp('/opt/tivoli/tsm/client/ba/bin/dsm.sys').lines;
+    my %stanzas;
+    my $current-key = 'ERROR';
+    for @dsm-sys -> $rcd {
+        if $rcd ~~ m:i/ ^ SERVERNAME \s+ <alnum>+? '_' $<server>=(<alnum>+) \s* $ / {
+            $current-key = $/<server>.Str;
+            next;
+        }
+        elsif $rcd ~~ m:i/ ^ \s* TCPS\w* \s+ $<value>=(.+) \s* $/ {
+            %stanzas{$current-key}<TCPSERVERADDRESS> = $/<value>.Str;
+        }
+    }
+    unless %stanzas{$PRIMARY_SERVER_NAME}:exists {
+        warn "Use any of:"
+        .warn for %stanzas.keys;
+        die 'SERVERNAME stanza containing $isp-server <' ~ $PRIMARY_SERVER_NAME ~ "> not found in '/opt/tivoli/tsm/client/ba/bin/dsm.sys'";
+    }
+
