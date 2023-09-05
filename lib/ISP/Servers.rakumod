@@ -6,6 +6,7 @@ use Term::Choose;
 has %.isp-servers;
 
 class ISP-SERVER-INFO {
+    has $.SERVERNAME;
     has $.TCPSERVERADDRESS  is rw;
 }
 
@@ -45,7 +46,7 @@ submethod TWEAK {
             $err     = $proc.err.slurp(:close);
             die 'FAILED: ' ~ @rcmd ~ ":\t" ~ $err if $err;
             if $out {
-                %!isp-servers = $out.chomp.split("\n").map: { $_.uc => 0 };
+                %!isp-servers = $out.chomp.split("\n").map: { $_.uc => {} };
                 die "Set up '/opt/tivoli/tsm/client/ba/bin/dsm.sys' & install '/usr/bin/dsmadmc' on this host." unless '/opt/tivoli/tsm/client/ba/bin/dsm.sys'.IO.path:s;
                 my @dsm-sys     = slurp('/opt/tivoli/tsm/client/ba/bin/dsm.sys').lines;
                 my $current-server;
@@ -54,7 +55,7 @@ submethod TWEAK {
                     if $rcd ~~ m:i/ ^ SERVERNAME \s+ $<client>=(<alnum>+?) '_' $<server>=(<alnum>+) \s* $ / {           # %%% make this accept client names with '_'; take all but not the last '_'
                         $current-server = $/<server>.Str;
                         $current-client = $/<client>.Str;
-                        %!isp-servers{$current-server}{$client} .= ISP-SERVER-INFO.new(:SERVERNAME($/<client>.Str ~ '_' ~ $current-server));
+                        %!isp-servers{$current-server}{$current-client} = ISP-SERVER-INFO.new(:SERVERNAME($current-client ~ '_' ~ $current-server));
                     }
                     elsif $rcd ~~ m:i/ ^ \s* TCPS\w* \s+ $<value>=(.+) \s* $/ {
                         %!isp-servers{$current-server}{$current-client}.TCPSERVERADDRESS = $/<value>.Str;
@@ -91,12 +92,12 @@ method isp-server (Str $isp-server-name?) {
     die;
 }
 
-method SERVERNAME (Str:D :$isp-server, Str:D :$isp-client) {
-    die "Invalid ISP Server name <' ~ $isp-server ~ '> specified!'  unless %!isp-servers{$isp-server}:exists;
-    die "Invalid ISP client name <' ~ $isp-client ~ '> specified!'  unless %!isp-servers{$isp-server}{$isp-client}:exists;
-    return %!isp-servers{$isp-server}{$isp-client}.SERVERNAME if %!isp-servers{$isp-server-name}{$isp-client}.SERVERNAME;
+method serveraddress (Str:D :$isp-server, Str:D :$isp-client) {
+    die 'Invalid ISP Server name <' ~ $isp-server ~ '> specified!'  unless %!isp-servers{$isp-server}:exists;
+    die 'Invalid ISP client name <' ~ $isp-client ~ '> specified!'  unless %!isp-servers{$isp-server}{$isp-client}:exists;
+    return %!isp-servers{$isp-server}{$isp-client}.SERVERNAME if %!isp-servers{$isp-server}{$isp-client}.SERVERNAME;
     $*ERR.put: colored('No SERVERNAME stanza associated with ISP client <' ~ $isp-client ~ '> and ISP server <' ~ $isp-server ~ '>!', 'red');
-    die "Set up '/opt/tivoli/tsm/client/ba/bin/dsm.sys' & /usr/bin/dsmadmc before using this script with a "SERVERNAME ' ~ $isp-client ~ '_' ~ $isp-server ~ '" stanza before proceeding.';
+    die 'Set up "/opt/tivoli/tsm/client/ba/bin/dsm.sys" with an appropriate "SERVERNAME ' ~ $isp-client ~ '_' ~ $isp-server ~ '" stanza before proceeding.';
 }
 
 =finish
