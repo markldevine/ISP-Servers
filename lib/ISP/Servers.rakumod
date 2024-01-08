@@ -22,7 +22,8 @@ submethod TWEAK {
     }
     my @redis-clis;
     for @redis-servers -> $redis-server {
-        my @cmd-string = sprintf("ssh -L 127.0.0.1:6379:%s:6379 %s /usr/bin/redis-cli", $redis-server, $redis-server).split: /\s+/;
+        my @cmd-string  = '/usr/bin/redis-cli';
+        @cmd-string     = sprintf("ssh -L 127.0.0.1:6379:%s:6379 %s /usr/bin/redis-cli", $redis-server, $redis-server).split: /\s+/ unless $redis-server eq 'localhost';
         @redis-clis.push: @cmd-string;
     }
     for @redis-clis -> @redis-cli {
