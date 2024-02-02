@@ -55,6 +55,7 @@ submethod TWEAK {
                 for @dsm-sys -> $rcd {
                     if $rcd ~~ m:i/ ^ SERVERNAME \s+ $<client>=(<alnum>+?) '_' $<server>=(<alnum>+) \s* $ / {           # %%% make this accept client names with '_'; take all but not the last '_'
                         $current-server = $/<server>.Str;
+                        next    unless $!isp-servers{$current-server}:exists;
                         $current-client = $/<client>.Str;
                         %!isp-servers{$current-server}{$current-client} = ISP-SERVER-INFO.new(:SERVERNAME($current-client ~ '_' ~ $current-server));
                     }
